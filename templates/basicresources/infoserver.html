@@ -1,0 +1,525 @@
+{% extends 'common/layout.html' %}
+{% block title %}服务器资产信息{% endblock %}
+{% block css %}
+<!--<link rel="stylesheet" type="text/css" href="/static/css/bootstrap-datetimepicker.min.css"/>-->
+{% endblock %}
+{% block style %}
+.nav-btn-right{float:right;}
+.list-check-column {
+    display: inline-block;
+    min-width: 138px;
+    padding: 8px 6px;
+}
+{% endblock %}
+{% block activeinfoserver %}class="active"{% endblock %}
+{% block container %}
+<div class="col-md-11 col-md-offset-1 main">
+    <div>
+        <div class="row">
+            <div class="col-md-1">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addInfoServer">
+                    添加服务器
+                </button>
+            </div>
+            <div class="col-md-4">
+                <form class="form-inline" name="query_form" action="/infoserver/list" method="post">
+                    <!-- query and pagesize set -->
+                    <input id="query_sort" name="query_sort" value="{{query_sort}}" type="hidden"/>
+                    <input id="pageNum" name="pageNum" value="{{pageList.pageNum}}" type="hidden"/>
+                    <input id="pageSize" name="pageSize" value="{{pageList.pageSize}}" type="hidden"/>
+                    <input id="maxPageNum" name="maxPageNum" value="{{pageList.maxPageNum}}" type="hidden" disabled="disabled"/>
+                    <!-- end -->
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="query_sn" placeholder="sn" value="{{query_sn}}"/>
+                        <input type="submit" class="btn btn-default" value="查询"/>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-1 col-md-offset-6">
+                <button type="button" class="btn btn-default" data-toggle="modal" data-target="#checkDisList">
+                    自定义显示项
+                </button>
+            </div>
+        </div>
+        </br>
+        <table class="table table-striped table-hover table-bordered table-condensed" id="tb_info">
+            <thead>
+                <tr>
+                    <th><a href="javascript:sortby('sn');">sn</a></th>
+                    <th class="isdis_assettag"><a href="javascript:sortby('assettag');">资产编号</a></th>
+                    <th class="isdis_brand"><a href="javascript:sortby('brand');">品牌</a></th>
+                    <th class="isdis_model"><a href="javascript:sortby('model');">型号</a></th>
+                    <th class="isdis_cpu"><a href="javascript:sortby('cpu');">cpu</a></th>
+                    <th class="isdis_ram"><a href="javascript:sortby('ram');">内存</a></th>
+                    <th class="isdis_disk"><a href="javascript:sortby('disk');">硬盘</a></th>
+                    <th class="isdis_usize"><a href="javascript:sortby('usize');">高度</a></th>
+                    <th class="isdis_raidcard"><a href="javascript:sortby('raidcard');">raid卡</a></th>
+                    <th class="isdis_buytime"><a href="javascript:sortby('buytime');">购买时间</a></th>
+                    <th class="isdis_guaranteetime"><a href="javascript:sortby('guaranteetime');">保修到期</a></th>
+                    <th class="isdis_note">备注</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for info in pageList.contents %}
+                <tr>
+                    <td class="isdis_sn">{{info.sn}}</td>
+                    <td class="isdis_assettag">{{info.assettag}}</td>
+                    <td class="isdis_brand">{{info.brand}}</td>
+                    <td class="isdis_model">{{info.model}}</td>
+                    <td class="isdis_cpu">{{info.cpu}}</td>
+                    <td class="isdis_ram">{{info.ram}}</td>
+                    <td class="isdis_disk">{{info.disk}}</td>
+                    <td class="isdis_usize">{{info.usize}}</td>
+                    <td class="isdis_raidcard">{{info.raidcard}}</td>
+                    <td class="isdis_buytime">{{info.buytime}}</td>
+                    <td class="isdis_guaranteetime">{{info.guaranteetime}}</td>
+                    <td class="isdis_note">{{info.note}}</td>
+                    <td>
+                        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#upInfoServer"
+                        data-sn="{{info.sn}}"  data-assettag="{{info.assettag}}" data-brand="{{info.brand}}" 
+                        data-model="{{info.model}}" data-cpu="{{info.cpu}}" data-ram="{{info.ram}}" 
+                        data-disk="{{info.disk}}" data-usize="{{info.usize}}" data-raidcard="{{info.raidcard}}" 
+                        data-buytime="{{info.buytime}}" data-guaranteetime="{{info.guaranteetime}}" data-note="{{info.note}}">
+                        修改
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="13">暂无数据</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% include 'commom/pagesize.html' %}
+    </div>
+</div>
+
+<!-- Modal upInfoServer-->
+<div class="modal fade" id="upInfoServer" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"  aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">修改服务器资产信息</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal" >
+          <div class="alert alert-danger" role="alert" id="errormsg-update"></div>
+          <input type="hidden" name="sn" id='sn_up' />
+          <div class="form-group">
+            <label for="assettag_up" class="col-sm-2 control-label">资产编号</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="assettag" id="assettag_up" disabled="disabled">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="brand_up" class="col-sm-2 control-label">品牌</label>
+            <div class="col-sm-10">
+               <select id="brand_up" class="form-control" disabled="disabled">
+                <option value='DELL'>DELL</option>
+                <option value='IBM'>IBM</option>
+                <option value='HP'>HP</option>
+                <option value='Lenovo'>Lenovo</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="model_up" class="col-sm-2 control-label">型号</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control"  name="model" id="model_up" disabled="disabled">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="usize_up" class="col-sm-2 control-label">高度</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control"  name="usize" id="usize_up" disabled="disabled">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="cpu_up" class="col-sm-2 control-label">cpu</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control"  name="cpu" id="cpu_up">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="ram_up" class="col-sm-2 control-label">内存</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control"  name="ram" id="ram_up">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="disk_up" class="col-sm-2 control-label">硬盘</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control"  name="disk" id="disk_up">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="raidcard_up" class="col-sm-2 control-label">raid卡</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control"  name="raidcard" id="raidcard_up">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="buytime_up" class="col-sm-2 control-label">购买时间</label>
+            <div class="col-sm-10 ">
+              <input type="text" class="form-control"  name="buytime" id="buytime_up" disabled="disabled">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="guaranteetime_up" class="col-sm-2 control-label">保修到期</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control"  id="guaranteetime_up" 
+              onfocus="WdatePicker({isShowClear:false,isShowToday:true,isShowOK:false,qsEnabled:false,highLineWeekDay:false})"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="note_up" class="col-sm-2 control-label">备注</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control"  name="note" id="note_up">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" id="btn-update">保存</button>
+      </div>      
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal addInfoServer-->
+<div class="modal fade" id="addInfoServer" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"  aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addInfoServerLabel">新增服务器资产信息</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal" >
+          <div class="alert alert-danger" role="alert" id="errormsg-add"></div>
+          <div class="form-group">
+            <label for="sn_add" class="col-sm-2 control-label">sn</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="sn" id="sn_add">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="assettag_add" class="col-sm-2 control-label">资产编号</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="assettag" id="assettag_add">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="brand_add" class="col-sm-2 control-label">品牌</label>
+            <div class="col-sm-10">
+               <select id="brand_add" class="form-control">
+                <option value='DELL'>DELL</option>
+                <option value='IBM'>IBM</option>
+                <option value='Lenovo'>Lenovo</option>
+                <option value='HP'>HP</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="model_add" class="col-sm-2 control-label">型号</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control"  name="model" id="model_add">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="usize_add" class="col-sm-2 control-label">高度</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control"  name="usize" id="usize_add">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="cpu_add" class="col-sm-2 control-label">cpu</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control"  name="cpu" id="cpu_add">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="ram_add" class="col-sm-2 control-label">内存</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control"  name="ram" id="ram_add">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="disk_add" class="col-sm-2 control-label">硬盘</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control"  name="disk" id="disk_add">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="raidcard_add" class="col-sm-2 control-label">raid卡</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control"  name="raidcard" id="raidcard_add">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="buytime_add" class="col-sm-2 control-label datetimepicker">购买时间</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="buytime" id="buytime_add"  
+              onfocus="WdatePicker({isShowClear:false,isShowToday:true,isShowOK:false,qsEnabled:false,highLineWeekDay:false})"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="guaranteetime_add" class="col-sm-2 control-label">保修到期</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="guaranteetime" id="guaranteetime_add" 
+              onfocus="WdatePicker({isShowClear:false,isShowToday:true,isShowOK:false,qsEnabled:false,highLineWeekDay:false})"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="note_add" class="col-sm-2 control-label">备注</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control"  name="note" id="note_add">
+            </div>
+          </div>
+        </form>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" id="btn-add">新增</button>
+        </div>
+      </div>  
+    </div>
+  </div>
+</div>
+
+<!-- Modal checkDisList-->
+<div class="modal fade" id="checkDisList"  tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">自定义显示项</h4>
+      </div>
+    <div class="modal-body">
+        <div class="row">
+          <div class="list-check-column">
+            <label class="checkbox-inline">
+              <input type="checkbox" id="chkdis_sn" checked disabled> SN
+            </label>
+          </div>  
+          <div class="list-check-column">
+            <label class="checkbox-inline">
+              <input type="checkbox" id="chkdis_assettag" checked> 资产编号
+            </label>
+          </div>  
+          <div class="list-check-column">
+            <label class="checkbox-inline">
+              <input type="checkbox" id="chkdis_brand" checked> 品牌
+            </label>
+          </div>  
+          <div class="list-check-column">
+            <label class="checkbox-inline">
+              <input type="checkbox" id="chkdis_model" checked> 型号
+            </label>
+          </div>  
+        </div>
+        <div class="row">
+          <div class="list-check-column">
+            <label class="checkbox-inline">
+              <input type="checkbox" id="chkdis_cpu" checked> cpu
+            </label>
+          </div>  
+          <div class="list-check-column">  
+            <label class="checkbox-inline">
+              <input type="checkbox" id="chkdis_ram" checked> 内存
+            </label>
+          </div>  
+          <div class="list-check-column">    
+            <label class="checkbox-inline">
+              <input type="checkbox" id="chkdis_disk" checked> 硬盘
+            </label>
+          </div>  
+          <div class="list-check-column">    
+            <label class="checkbox-inline">
+              <input type="checkbox" id="chkdis_usize" checked> 高度
+            </label>
+          </div>  
+        </div>
+        <div class="row"> 
+          <div class="list-check-column">  
+            <label class="checkbox-inline">
+              <input type="checkbox" id="chkdis_raidcard" checked> raid卡
+            </label>
+          </div>  
+          <div class="list-check-column">    
+            <label class="checkbox-inline">
+              <input type="checkbox" id="chkdis_buytime" checked> 购买时间
+            </label>
+          </div>  
+          <div class="list-check-column">    
+            <label class="checkbox-inline">
+              <input type="checkbox" id="chkdis_guaranteetime" checked> 保修到期
+            </label>
+          </div>  
+          <div class="list-check-column">    
+            <label class="checkbox-inline">
+              <input type="checkbox" id="chkdis_note" checked> 备注
+            </label>
+          </div>   
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal" id="btn-chklist">确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+{% block js %}
+<script type="text/javascript" src="/static/My97DatePicker/WdatePicker.js"></script>
+<script type="text/javascript" src="/static/js/pagesize.js"></script>
+{% endblock %}
+{% block javascript %}
+// 手动输入页码
+jQuery(document).ready(function(){
+    // 更新选择显示的列，遍历每列的选择情况，再分别设置显示或者取消显示
+    $('#btn-chklist').on('click',function(){
+        var cols=['sn','assettag','brand','model','cpu','ram','disk','usize','raidcard','buytime','guaranteetime','note']
+        for (key in cols){
+            if ($("#chkdis_"+cols[key]).is(':checked')){
+                $(".isdis_"+cols[key]).css("display","");
+            }else{
+                $(".isdis_"+cols[key]).css("display","none");
+            };
+        };
+        $('#checkDisList').hide();
+    });
+    
+    // 更新信息弹框
+    $('#upInfoServer').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget);
+      var sn = button.data('sn');
+      var modal = $(this);
+      jQuery("#errormsg-update").hide();
+      modal.find('.modal-title').text('修改服务器（' + sn +'）的资产信息');
+      modal.find('#sn_up').val(sn);
+      modal.find('#assettag_up').val(button.data('assettag'));
+      modal.find('#brand_up').val(button.data('brand'));
+      modal.find('#model_up').val(button.data('model'));
+      modal.find('#cpu_up').val(button.data('cpu'));
+      modal.find('#ram_up').val(button.data('ram'));
+      modal.find('#disk_up').val(button.data('disk'));
+      modal.find('#usize_up').val(button.data('usize'));
+      modal.find('#raidcard_up').val(button.data('raidcard'));
+      modal.find('#buytime_up').val(button.data('buytime'));
+      modal.find('#guaranteetime_up').val(button.data('guaranteetime'));
+      modal.find('#note_up').val(button.data('note'));
+    });   
+    // 发送更新请求
+    $('#btn-update').on('click',function(){
+      var sn = $('#sn_up').val(),
+          assettag = $('#assettag_up').val(),
+          brand = $('#brand_up').val(),
+          model = $('#model_up').val(),
+          cpu = $('#cpu_up').val(),
+          ram = $('#ram_up').val(),
+          disk = $('#disk_up').val(),
+          usize = $('#usize_up').val(),
+          raidcard = $('#raidcard_up').val(),
+          buytime = $('#buytime_up').val(),
+          guaranteetime = $('#guaranteetime_up').val(),
+          note = $('#note_up').val();
+      jQuery.post('/infoserver/update',{
+        'sn':sn,
+        'assettag':assettag,
+        'brand':brand,
+        'model':model,
+        'cpu':cpu,
+        'ram':ram,
+        'disk':disk,
+        'usize':usize,
+        'raidcard':raidcard,
+        'buytime':buytime,
+        'guaranteetime':guaranteetime,
+        'note':note
+      },function(res){
+        //console.log(res);
+        if(res['ok']){
+            jQuery('#upInfoServer').hide();
+            swal({
+              title: res['result'],
+              type: "success",
+              showConfirmButton:false,
+              timer:1150,
+            },function(){
+              window.location.reload();
+            });
+        }else{
+            jQuery("#errormsg-update").text(res['result']);
+            jQuery("#errormsg-update").show();
+        }
+      } , "json");
+      $('#guaranteetime_up').datetimepicker({
+        language:'zh-CN',
+        format: 'yyyy-mm-dd',
+        autoclose:true,
+        minView:2,
+        pickerPosition:'top-right'
+    });
+    });
+    
+    
+    // 新增用户信息弹框
+    $('#addInfoServer').on('show.bs.modal', function (event) {
+      jQuery("#errormsg-add").hide();
+    }); 
+    // 发送添加请求
+    $('#btn-add').on('click',function(){
+      var sn = $('#sn_add').val(),
+          assettag = $('#assettag_add').val(),
+          brand = $('#brand_add').val(),
+          model = $('#model_add').val(),
+          cpu = $('#cpu_add').val(),
+          ram = $('#ram_add').val(),
+          disk = $('#disk_add').val(),
+          usize = $('#usize_add').val(),
+          raidcard = $('#raidcard_add').val(),
+          buytime = $('#buytime_add').val(),
+          guaranteetime = $('#guaranteetime_add').val(),
+          note = $('#note_add').val();
+      //console.log([username,realname,password,telephone,status])
+      jQuery.post('/infoserver/add',{
+        'sn':sn,
+        'assettag':assettag,
+        'brand':brand,
+        'model':model,
+        'cpu':cpu,
+        'ram':ram,
+        'disk':disk,
+        'usize':usize,
+        'raidcard':raidcard,
+        'buytime':buytime,
+        'guaranteetime':guaranteetime,
+        'note':note
+      },function(res){
+        //console.log(res);
+        if(res['ok']){
+            jQuery('#addInfoServer').hide();
+            swal({
+              title: res['result'],
+              type: "success",
+              showConfirmButton:false,
+              timer:1150,
+            },function(){
+              window.location.reload();
+            });
+        }else{
+            jQuery("#errormsg-add").text(res['result']);
+            jQuery("#errormsg-add").show();
+        }
+      } , "json");
+    });
+});
+{% endblock %}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>登陆</title>
+        <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css"/>
+		<style type="text/css">
+            body {
+              padding-top: 40px;
+              padding-bottom: 40px;
+              background-color: #eee;
+            }
+            .form-signin {
+              max-width: 330px;
+              padding: 15px;
+              margin: 0 auto;
+            }
+		</style>
+	</head>
+	<body>
+        
+        <div class="container">
+            <form class="form-signin" action="/user/login" method="POST">
+                <h2 class="form-signin-heading">用户登录</h2>
+                {% if error %}
+                    <p class="alert alert-danger">{{error}}</p>
+                {% endif %}
+                <div class="form-group" >
+                    <input type="text" name="username" class="form-control" value="{{login_username}}" placeholder="用户名"/> <br/>
+                </div>
+                <div class="form-group">
+                    <input type="password" name="password" class="form-control" placeholder="密码"/> <br/>
+                </div>
+                <button type="submit" class="btn btn-lg btn-primary btn-block">登陆</button>
+            </form>
+        </div>
+	</body>
+</html>

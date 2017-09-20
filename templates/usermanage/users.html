@@ -1,0 +1,375 @@
+{% extends 'common/layout.html' %}
+{% block title %}用户管理{% endblock %}
+{% block css %}
+{% endblock %}
+{% block style %}
+.nav-btn-right{float:right;}
+{% endblock %}
+{% block activeuser %}class="active"{% endblock %}
+{% block container %}
+<div class="col-md-11 col-md-offset-1 main">
+    <div>
+        <div class="row">
+            <div class="col-md-1">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addUser">
+                    添加用户
+                </button>
+            </div>
+            <div class="col-md-5">
+                <form class="form-inline"  name="query_form" action="/user/list" method="POST">
+                    <input id="pageNum" name="pageNum" value="{{pageList.pageNum}}" type="hidden"/>
+                    <input id="pageSize" name="pageSize" value="{{pageList.pageSize}}" type="hidden"/>
+                    <input id="maxPageNum" name="maxPageNum" value="{{pageList.maxPageNum}}" type="hidden" disabled="disabled"/>
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="query_username" placeholder="username" value="{{query_username}}"/>
+                        <div class="form-control" >
+                              <input type="checkbox" name="query_status" value="0" 
+                               {% if '0' in query_status %} checked{% endif %}> 正常
+                              <input type="checkbox" name="query_status" value="1"
+                              {% if '1' in query_status %} checked{% endif %}> 新增
+                              <input type="checkbox" name="query_status" value="2"
+                              {% if '2' in query_status %} checked{% endif %}> 禁用
+                        </div>
+                        <!--
+                        <select multiple  class="form-control" name="query_status2">
+                          <option value=''>所有</option>
+                          <option value='0'>可用</option>
+                          <option value='1'>新增(不可登陆)</option>
+                          <option value='2'>禁用</option>
+                          <option value='3'>其他</option>
+                        </select>
+                        -->
+                        <input type="submit" class="btn btn-primary form-control" value="查询"/>
+                    </div>
+                </form>
+            </div>
+        </div>
+        </br>
+        <table class="table table-striped table-hover table-bordered" id="tb_info">
+            <thead>
+                <tr>
+                    <th>用户名</th>
+                    <th>角色</th>
+                    <th>真实姓名</th>
+                    <th>电话号码</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in pageList.contents %}
+                <tr>
+                    <td>{{user.username}}</td>
+                    <td>
+                        {% if user.userrole %} {{ user.userrole}}
+                        {% else %} 暂未绑定
+                        {% endif %}
+                    </td>
+                    <td>{{user.realname}}</td>
+                    <td>{{user.telephone}}</td>
+                    <td>
+                        {% if user.status == 0 %}<p style="color:green">正常</p>
+                        {% elif user.status == 1 %}<p style="color:blue">新增(不可登陆)</p>
+                        {% elif user.status == 2 %}<p style="color:red">禁用</p>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#updateUser"
+                        data-uid="{{user.uid}}"  data-username="{{user.username}}" data-realname="{{user.realname}}"
+                        data-telephone="{{user.telephone}}" data-status="{{user.status}}">信息修改</button>
+                        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#userbindrole"
+                        data-uid="{{user.uid}}"  data-username="{{user.username}}" data-realname="{{user.realname}}"
+                        data-telephone="{{user.telephone}}" data-status="{{user.status}}">绑定角色</button>
+                        <!--<button type="button" class="btn btn-link" data-toggle="modal" data-target="#deleteUser"
+                        data-uid="{{user.uid}}"  data-username="{{user.username}}" data-realname="{{user.realname}}"
+                        data-telephone="{{user.telephone}}" data-status="{{user.status}}">删除</button>-->
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">暂无数据</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% include 'common/pagesize.html' %}
+    </div>
+</div>
+
+<!-- Modal updateuser-->
+<div class="modal fade" id="updateUser" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="z-index:9999">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"  aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">修改用户信息</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal" >
+          <div class="alert alert-danger" role="alert" id="errormsg-update"></div>
+          <input type="hidden" name="uid" id='uid_up' />
+          <div class="form-group">
+            <label for="realname_up" class="col-sm-2 control-label ">真实姓名</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="realname" id="realname_up">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="telephone_up" class="col-sm-2 control-label">手机号</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="telephone" id="telephone_up">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="password_up" class="col-sm-2 control-label">密码</label>
+            <div class="col-sm-10">
+              <input type="password" class="form-control"  name="password" id="password_up">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="status_up" class="col-sm-2 control-label">状态</label>
+            <div class="col-sm-10">
+              <select id="status_up" class="form-control">
+                <option value='0'>可用</option>
+                <option value='1'>新增(不可登陆)</option>
+                <option value='2'>禁用</option>
+              </select>
+            </div>
+          </div>
+        </form>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" id="btn-update">保存</button>
+        </div>
+      </div>  
+    </div>
+  </div>
+</div>
+
+<!-- Modal deleteUser/-->
+<div class="modal fade" id="deleteUser" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="gridSystemModalLabel">删除用户</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal">
+          <div class="alert alert-danger" role="alert" id="errormsg-del"></div>
+          <input type="hidden" name="uid" id='uid_del' />
+          <input type="hidden" name="username" id='username_del' />
+          <div class="form-group">
+            <label for="realname_del" class="col-sm-2 control-label">真实姓名</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="realname" id="realname_del" disabled="disabled">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="telephone_del" class="col-sm-2 control-label">手机号</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="telephone" id="telephone_del" disabled="disabled">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="status_del" class="col-sm-2 control-label">状态</label>
+            <div class="col-sm-10">
+              <select id="status_del" class="form-control" disabled="disabled">
+                <option value='0'>可用</option>
+                <option value='1'>新增(不可登陆)</option>
+                <option value='2'>禁用</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" id="btn-delete">删除</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal addUser-->
+<div class="modal fade" id="addUser" tabindex="1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"  aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addUserLabel">新增用户</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal" >
+          <div class="alert alert-danger" role="alert" id="errormsg-add"></div>
+          <div class="form-group">
+            <label for="username_add" class="col-sm-2 control-label">用户名</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="username" id="username_add">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="realname_add" class="col-sm-2 control-label">真实姓名</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="realname" id="realname_add">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="telephone_add" class="col-sm-2 control-label">手机号</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="telephone" id="telephone_add">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="password_add" class="col-sm-2 control-label">密码</label>
+            <div class="col-sm-10">
+              <input type="password" class="form-control"  name="password" id="password_add">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="status_add" class="col-sm-2 control-label">状态</label>
+            <div class="col-sm-10">
+              <select id="status_add" class="form-control">
+                <option value='0'>可用</option>
+                <option value='1'>新增(不可登陆)</option>
+                <option value='2'>禁用</option>
+              </select>
+            </div>
+          </div>
+        </form>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" id="btn-add">新增</button>
+        </div>
+      </div>  
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+<script type="text/javascript" src="/static/js/pagesize.js"></script>
+{% endblock %}
+{% block javascript %}
+jQuery(document).ready(function(){
+    // 更新信息弹框
+    $('#updateUser').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget);
+      var username = button.data('username');
+      var modal = $(this);
+      jQuery("#errormsg-update").hide();
+      modal.find('.modal-title').text('修改用户（' + username +'）的信息');
+      modal.find('#uid_up').val(button.data('uid'));
+      modal.find('#realname_up').val(button.data('realname'));
+      modal.find('#telephone_up').val(button.data('telephone'));
+      modal.find('#status_up').val(button.data('status'));
+    });   
+    // 发送更新请求
+    $('#btn-update').on('click',function(){
+      var uid = $('#uid_up').val(),
+          realname = $('#realname_up').val(),
+          telephone = $('#telephone_up').val(),
+          password = $('#password_up').val(),
+          status = $('#status_up').val();
+      jQuery.post('/user/update',{
+        'uid':uid,
+        'realname':realname,
+        'telephone':telephone,
+        'password':password,
+        'status':status
+      },function(res){
+        //console.log(res);
+        if(res['ok']){
+            jQuery('#updateUser').hide();
+            swal({
+              title: res['result'],
+              type: "success",
+              showConfirmButton:false,
+              timer:1150,
+            },function(){
+              window.location.reload();
+            });
+        }else{
+            jQuery("#errormsg-update").text(res['result']);
+            jQuery("#errormsg-update").show();
+        }
+      } , "json");
+    });
+    
+    // 删除用户信息弹框
+    $('#deleteUser').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget);
+      var username = button.data('username');
+      var modal = $(this);
+      jQuery("#errormsg-del").hide();
+      modal.find('.modal-title').text('真的要删除用户（' + username +'）吗？');
+      modal.find('#uid_del').val(button.data('uid'));
+      modal.find('#username_del').val(button.data('username'));
+      modal.find('#telephone_del').val(button.data('telephone'));
+      modal.find('#realname_del').val(button.data('realname'));
+      modal.find('#status_del').val(button.data('status'));
+    });
+    
+    // 发送删除请求
+    $('#btn-delete').on('click',function(){
+      var uid = $('#uid_del').val(),
+          username = $('#username_del').val();  
+      jQuery.get('/user/delete',{
+        'uid':uid,
+      }, function(res){
+        if(res['ok']){
+            jQuery('#deleteUser').hide();
+            swal({
+              title: "您已删除用户："+ username,
+              type: "success",
+              showConfirmButton:false,
+              timer:1250,
+            },function(){
+              window.location.reload();
+            });
+        }else{
+            jQuery("#errormsg-del").text(res['result']);
+            jQuery("#errormsg-del").show();
+        };
+      },"json");
+    });
+
+    // 新增用户信息弹框
+    $('#addUser').on('show.bs.modal', function (event) {
+      jQuery("#errormsg-add").hide();
+
+    }); 
+    // 发送添加请求
+    $('#btn-add').on('click',function(){
+//$('#updateUser').modal();
+      var username = $('#username_add').val(),
+          realname = $('#realname_add').val(),
+          password = $('#password_add').val(),
+          telephone = $('#telephone_add').val(),
+          status = $('#status_add').val();
+      //console.log([username,realname,password,telephone,status])
+      jQuery.post('/user/add',{
+        'username':username,
+        'realname':realname,
+        'password':password,
+        'telephone':telephone,
+        'status':status
+      },function(res){
+        //console.log(res);
+        if(res['ok']){
+            jQuery('#addUser').hide();
+            swal({
+              title: res['result'],
+              type: "success",
+              showConfirmButton:false,
+              timer:1150,
+            },function(){
+              window.location.reload();
+            });
+        }else{
+            jQuery("#errormsg-add").text(res['result']);
+            jQuery("#errormsg-add").show();
+        }
+      } , "json");
+    });
+});
+{% endblock %}

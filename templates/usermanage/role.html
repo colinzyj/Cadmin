@@ -1,0 +1,360 @@
+{% extends 'common/layout.html' %}
+{% block title %}角色管理{% endblock %}
+{% block css %}
+{% endblock %}
+{% block style %}
+.nav-btn-right{float:right;}
+.list-check-column {
+    display: inline-block;
+    min-width: 138px;
+    padding: 8px 6px;
+}
+{% endblock %}
+{% block activerole %}class="active"{% endblock %}
+{% block container %}
+<div class="col-md-11 col-md-offset-1 main">
+    <div>
+        <div class="row">
+            <div class="col-md-1">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addrole">
+                    添加角色
+                </button>
+            </div>
+            <div class="col-md-7">
+                <form class="form-inline" name="query_form" action="/role/list" method="POST">
+                    <input id="pageNum" name="pageNum" value="{{pageList.pageNum}}" type="hidden"/>
+                    <input id="pageSize" name="pageSize" value="{{pageList.pageSize}}" type="hidden"/>
+                    <input id="maxPageNum" name="maxPageNum" value="{{pageList.maxPageNum}}" type="hidden" disabled="disabled"/>
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="query_rolename" placeholder="角色名称" value="{{query_rolename}}"/>
+                        <input type="text" class="form-control" name="query_roledesc" placeholder="角色描述" value="{{query_roledesc}}"/>
+                        <input type="submit" class="btn btn-primary form-control" value="查询"/>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <table class="table table-striped table-hover table-bordered" id="tb_info">
+            <thead>
+                <tr>
+                    <th style="display:none;">角色编号</th>
+                    <th>角色名称</th>
+                    <th>角色描述</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for obj in pageList.contents %}
+                <tr>
+                    <td style="display:none;">{{obj.role_id}}</td>
+                    <td>{{obj.role_name}}</td>
+                    <td>{{obj.role_desc}}</td>
+                    <td>
+                        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#updaterole"
+                        data-role_id="{{obj.role_id}}" data-role_name="{{obj.role_name}}"
+                        data-role_desc="{{obj.role_desc}}">修改</button>
+                        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#deleterole"
+                        data-role_id="{{obj.role_id}}" data-role_name="{{obj.role_name}}"
+                        data-role_desc="{{obj.role_desc}}">删除</button>
+                        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#rolepermitlist"
+                        data-role_id="{{obj.role_id}}" data-role_name="{{obj.role_name}}"
+                        data-role_desc="{{obj.role_desc}}">设定权限</button>
+                        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#rolebinduser"
+                        data-role_id="{{obj.role_id}}" data-role_name="{{obj.role_name}}"
+                        data-role_desc="{{obj.role_desc}}">添加到用户</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3">暂无数据</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% include 'common/pagesize.html' %}
+    </div>
+</div>
+
+<!-- Modal updaterole-->
+<div class="modal fade" id="updaterole" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"  aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">修改信息</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal" >
+          <div class="alert alert-danger" role="alert" id="errormsg-update"></div>
+          <input type="hidden" name="roleid" id='roleid_up' />
+          <div class="form-group">
+            <label for="rolename_up" class="col-sm-2 control-label">角色名称</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="rolename" id="rolename_up">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="roledesc_up" class="col-sm-2 control-label">角色描述</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="roledesc" id="roledesc_up">
+            </div>
+          </div>
+        </form>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" id="btn-update">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal deleterole/-->
+<div class="modal fade" id="deleterole" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="gridSystemModalLabel">删除用户</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal">
+          <div class="alert alert-danger" role="alert" id="errormsg-del"></div>
+          <input type="hidden" name="roleid" id='roleid_del' />
+          <div class="form-group">
+            <label for="rolename_del" class="col-sm-2 control-label">角色名称</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="rolename" id="rolename_del">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="roledesc_del" class="col-sm-2 control-label">角色描述</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="roledesc" id="roledesc_del">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" id="btn-delete">删除</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal addrole-->
+<div class="modal fade" id="addrole" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"  aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addroleLabel">新增角色</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal" >
+          <div class="alert alert-danger" role="alert" id="errormsg-add"></div>
+          <div class="form-group">
+            <label for="rolename_add" class="col-sm-2 control-label">角色名称</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="rolename" id="rolename_add">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="roledesc_add" class="col-sm-2 control-label">角色描述</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="roledesc" id="roledesc_add">
+            </div>
+          </div>
+        </form>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" id="btn-add">新增</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="rolepermitlist"  tabindex="-1" role="dialog" style="z-index:9001">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="title-rolepermit">自定义显示项</h4>
+        <div class="alert alert-danger" role="alert" id="errormsg-rolepermitlist"></div>
+        <input type="hidden" name="roleid" id='roleid_rolepermitlist' />
+      </div>
+      <div class="modal-body" id="permitlist">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal" id="btn-delrolepermit">删除所选权限</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal" id="btn-addrolepermit">新增其他权限</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+<script type="text/javascript" src="/static/js/pagesize.js"></script>
+{% endblock %}
+{% block javascript %}
+jQuery(document).ready(function(){
+ $('#rolepermitlist').on('show.bs.modal', function (event) {
+      jQuery("#permitlist").empty();
+      var button = $(event.relatedTarget);
+      var rolename = button.data('role_name');
+      var roleid = button.data('role_id');
+      var modal = $(this);
+      jQuery("#errormsg-rolepermitlist").hide();
+      modal.find('#title-rolepermit').text('修改角色（' + rolename +'）的权限');
+      modal.find('#roleid_rolepermitlist').val(button.data('role_id'));
+      jQuery.get('/rolepermit/listbyrid',{
+        'roleid':roleid
+       },function(res){
+        test=res;
+        for ( var key in res['result']) {
+            //console.log(res['result'][key]);
+            if (key%4 == 0 ){
+                jQuery("#permitlist").append('<div class="row" id="' + key+ '">');
+                var x =$('#'+key);
+            }
+            x.append("<div class=list-check-column><label class=checkbox-inline><input type=checkbox name=roledelpermitid value=" +  res['result'][key][0] + ">" + res['result'][key][1] + "</label></div>");
+        }
+      } , "json");
+    });
+    // 发送请求
+    $('#btn-delrolepermit').on('click',function(){
+      var roleid = $('#roleid_rolepermitlist').val();
+      //获取checkbox的值
+      var chk_value = new Array();
+      $('input[name="roledelpermitid"]:checked').each(function(){
+         chk_value.push($(this).val());
+       });
+      var chkvaluestr=chk_value.join(',');  //将数组转换成字符串
+      jQuery.post('/rolepermit/unbind',{
+        'roleid':roleid,
+        'permitid':chkvaluestr
+      },function(res){
+        //console.log(res);
+        if(res['ok']){
+            jQuery('#updateUser').hide();
+            swal({
+              title: res['result'],
+              type: "success",
+              showConfirmButton:false,
+              timer:1150,
+            },function(){
+              window.location.reload();
+            });
+        }else{
+            jQuery("#errormsg-update").text(res['result']);
+            jQuery("#errormsg-update").show();
+        }
+      } , "json");
+    });
+
+
+    // 更新信息弹框
+    $('#updaterole').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget);
+      var modal = $(this);
+      jQuery("#errormsg-update").hide();
+      modal.find('#roleid_up').val(button.data('role_id'));
+      modal.find('#rolename_up').val(button.data('role_name'));
+      modal.find('#roledesc_up').val(button.data('role_desc'));
+    });
+    // 发送更新请求
+    $('#btn-update').on('click',function(){
+      var role_id = $('#roleid_up').val(),
+          role_name = $('#rolename_up').val(),
+          role_desc = $('#roledesc_up').val();
+      jQuery.post('/role/update',{
+        'role_id':role_id,
+        'role_name':role_name,
+        'role_desc':role_desc
+      },function(res){
+        //console.log(res);
+        if(res['ok']){
+            jQuery('#updaterole').hide();
+            swal({
+              title: res['result'],
+              type: "success",
+              showConfirmButton:false,
+              timer:1150,
+            },function(){
+              window.location.reload();
+            });
+        }else{
+            jQuery("#errormsg-update").text(res['result']);
+            jQuery("#errormsg-update").show();
+        }
+      } , "json");
+    });
+
+    // 删除信息弹框
+    $('#deleterole').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget);
+      var modal = $(this);
+      jQuery("#errormsg-del").hide();
+      modal.find('#roleid_del').val(button.data('role_id'));
+      modal.find('#rolename_del').val(button.data('role_name'));
+      modal.find('#roledesc_del').val(button.data('role_desc'));
+    });
+
+    // 发送删除请求
+    $('#btn-delete').on('click',function(){
+      var roleid = $('#roleid_del').val(),
+          rolename = $('#rolename_del').val();
+      jQuery.post('/role/delete',{
+        'role_id':roleid
+      }, function(res){
+        if(res['ok']){
+            jQuery('#deleterole').hide();
+            swal({
+              title: "您已删除角色："+ rolename,
+              type: "success",
+              showConfirmButton:false,
+              timer:1250,
+            },function(){
+              window.location.reload();
+            });
+        }else{
+            jQuery("#errormsg-del").text(res['result']);
+            jQuery("#errormsg-del").show();
+        };
+      },"json");
+    });
+
+    // 新增信息弹框
+    $('#addrole').on('show.bs.modal', function (event) {
+      jQuery("#errormsg-add").hide();
+    });
+    // 发送添加请求
+    $('#btn-add').on('click',function(){
+      var rolename = $('#rolename_add').val(),
+          roledesc = $('#roledesc_add').val();
+      //console.log([roleid,rolename,roledesc])
+      jQuery.post('/role/add',{
+        'role_name':rolename,
+        'role_desc':roledesc
+      },function(res){
+        //console.log(res);
+        if(res['ok']){
+            jQuery('#addrole').hide();
+            swal({
+              title: res['result'],
+              type: "success",
+              showConfirmButton:false,
+              timer:1150,
+            },function(){
+              window.location.reload();
+            });
+        }else{
+            jQuery("#errormsg-add").text(res['result']);
+            jQuery("#errormsg-add").show();
+        }
+      } , "json");
+    });
+});
+{% endblock %}

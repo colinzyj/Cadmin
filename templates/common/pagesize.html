@@ -1,0 +1,41 @@
+
+<div class="row">
+  <div class="col-md-8" style="height: 79px;padding-top: 10px;">
+    <strong>每页</strong>
+    <select onchange="javascript:pageSizeChange(this.value);">
+      <option value="10" {% if pageList.pageSize==10 %}selected{% endif %}>10</option>
+      <option value="20" {% if pageList.pageSize==20 %}selected{% endif %}>20</option>
+      <option value="30" {% if pageList.pageSize==30 %}selected{% endif %}>30</option>
+      <option value="40" {% if pageList.pageSize==40 %}selected{% endif %}>40</option>
+      <option value="50" {% if pageList.pageSize==50 %}selected{% endif %}>50</option>
+    </select>
+    <strong>条（第{{pageList.pageNum}}页 / 共{{pageList.maxPageNum}}页），跳至</strong>
+    <input id="gotoPageNum" size="3" type="text" onkeydown="javascript:gotoPageNumberOnKeyDown(event);" />
+    <strong>页</strong>
+  </div>
+  <div class="col-md-4">
+    <nav class="nav-btn-right">
+      <ul class="pagination">
+        <li {% if pageList.pageNum == 1 %}class="disabled"{% endif %}>
+          <a {% if pageList.pageNum == 1 %} href="javascript:void(0)"
+             {% else %} href="javascript:gotoPage({{pageList.pageNum -1}});"
+             {% endif %} aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+        {% for page in range(pageList.startPageNum,pageList.endPageNum+1) %}
+          <li {% if page==pageList.pageNum%} class = "active"{% endif %}>
+            <a href="javascript:gotoPage({{page}});">{{page}}</a>
+          </li>
+        {% endfor %}
+        <li {% if pageList.maxPageNum==pageList.pageNum %} class="disabled"{% endif %}>
+          <a {% if pageList.maxPageNum==pageList.pageNum %} href="javascript:void(0)"
+             {% else %} href="javascript:gotoPage({{pageList.pageNum +1}});"
+             {% endif %}aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>

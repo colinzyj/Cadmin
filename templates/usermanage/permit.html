@@ -1,0 +1,305 @@
+{% extends 'common/layout.html' %}
+{% block title %}权限管理{% endblock %}
+{% block css %}
+{% endblock %}
+{% block style %}
+.nav-btn-right{float:right;}
+{% endblock %}
+{% block activepermit %}class="active"{% endblock %}
+{% block container %}
+<div class="col-md-11 col-md-offset-1 main">
+    <div>
+        <div class="row">
+            <div class="col-md-1">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addpermit">
+                    添加权限
+                </button>
+            </div>
+            <div class="col-md-7">
+                <form class="form-inline" name="query_form" action="/permit/list" method="POST">
+                    <input id="pageNum" name="pageNum" value="{{pageList.pageNum}}" type="hidden"/>
+                    <input id="pageSize" name="pageSize" value="{{pageList.pageSize}}" type="hidden"/>
+                    <input id="maxPageNum" name="maxPageNum" value="{{pageList.maxPageNum}}" type="hidden" disabled="disabled"/>
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="query_permitid" placeholder="权限编号" value="{{query_permitid}}"/>
+                        <input type="text" class="form-control" name="query_permitname" placeholder="权限名称" value="{{query_permitname}}"/>
+                        <input type="text" class="form-control" name="query_permitdesc" placeholder="权限描述" value="{{query_permitdesc}}"/>
+                        <input type="submit" class="btn btn-primary form-control" value="查询"/>
+                    </div>
+                </form>
+            </div>
+        </div>
+        </br>
+        <table class="table table-striped table-hover table-bordered" id="tb_info">
+            <thead>
+                <tr>
+                    <th style="display:none;">序号</th>
+                    <th>权限编号</th>
+                    <th>权限名称</th>
+                    <th>权限描述</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for permit in pageList.contents %}
+                <tr>
+                    <td style="display:none;">{{permit.id}}</td>
+                    <td>{{permit.permit_id}}</td>
+                    <td>{{permit.permit_name}}</td>
+                    <td>{{permit.permit_desc}}</td>
+                    <td>
+                        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#updatepermit"
+                        data-id="{{permit.id}}"  data-permit_id="{{permit.permit_id}}" data-permit_name="{{permit.permit_name}}"
+                        data-permit_desc="{{permit.permit_desc}}">修改</button>
+                        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#deletepermit"
+                        data-id="{{permit.id}}"  data-permit_id="{{permit.permit_id}}" data-permit_name="{{permit.permit_name}}"
+                        data-permit_desc="{{permit.permit_desc}}">删除</button>
+                        <button type="button" class="btn btn-link" data-toggle="modal" data-target="#permitbindrole"
+                        data-id="{{permit.id}}"  data-permit_id="{{permit.permit_id}}" data-permit_name="{{permit.permit_name}}"
+                        data-permit_desc="{{permit.permit_desc}}">添加到角色</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5">暂无数据</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% include 'common/pagesize.html' %}
+    </div>
+</div>
+
+<!-- Modal updatepermit-->
+<div class="modal fade" id="updatepermit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"  aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">修改信息</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal" >
+          <div class="alert alert-danger" role="alert" id="errormsg-update"></div>
+          <input type="hidden" name="id" id='id_up' />
+          <div class="form-group">
+            <label for="permitid_up" class="col-sm-2 control-label">权限编号</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="permitid" id="permitid_up">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="permitname_up" class="col-sm-2 control-label">权限名称</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="permitname" id="permitname_up">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="permitdesc_up" class="col-sm-2 control-label">权限描述</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="permitdesc" id="permitdesc_up">
+            </div>
+          </div>
+        </form>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" id="btn-update">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal deletepermit/-->
+<div class="modal fade" id="deletepermit" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="gridSystemModalLabel">删除用户</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal">
+          <div class="alert alert-danger" role="alert" id="errormsg-del"></div>
+          <input type="hidden" name="id" id='id_del' />
+          <div class="form-group">
+            <label for="permitid_del" class="col-sm-2 control-label">权限编号</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="permitid" id="permitid_del">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="permitname_del" class="col-sm-2 control-label">权限名称</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="permitname" id="permitname_del">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="permitdesc_del" class="col-sm-2 control-label">权限描述</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="permitdesc" id="permitdesc_del">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" id="btn-delete">删除</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal addpermit-->
+<div class="modal fade" id="addpermit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"  aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addpermitLabel">新增权限</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal" >
+          <div class="alert alert-danger" role="alert" id="errormsg-add"></div>
+          <div class="form-group">
+            <label for="permitid_add" class="col-sm-2 control-label">权限编号</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="permitid" id="permitid_add">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="permitname_add" class="col-sm-2 control-label">权限名称</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="permitname" id="permitname_add">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="permitdesc_add" class="col-sm-2 control-label">权限描述</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="permitdesc" id="permitdesc_add">
+            </div>
+          </div>
+        </form>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" id="btn-add">新增</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+<script type="text/javascript" src="/static/js/pagesize.js"></script>
+{% endblock %}
+{% block javascript %}
+jQuery(document).ready(function(){
+    // 更新信息弹框
+    $('#updatepermit').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget);
+      var modal = $(this);
+      jQuery("#errormsg-update").hide();
+      modal.find('#id_up').val(button.data('id'));
+      modal.find('#permitid_up').val(button.data('permit_id'));
+      modal.find('#permitname_up').val(button.data('permit_name'));
+      modal.find('#permitdesc_up').val(button.data('permit_desc'));
+    });
+    // 发送更新请求
+    $('#btn-update').on('click',function(){
+      var id = $('#id_up').val(),
+          permit_id = $('#permitid_up').val(),
+          permit_name = $('#permitname_up').val(),
+          permit_desc = $('#permitdesc_up').val();
+      jQuery.post('/permit/update',{
+        'id':id,
+        'permit_id':permit_id,
+        'permit_name':permit_name,
+        'permit_desc':permit_desc
+      },function(res){
+        //console.log(res);
+        if(res['ok']){
+            jQuery('#updatepermit').hide();
+            swal({
+              title: res['result'],
+              type: "success",
+              showConfirmButton:false,
+              timer:1150,
+            },function(){
+              window.location.reload();
+            });
+        }else{
+            jQuery("#errormsg-update").text(res['result']);
+            jQuery("#errormsg-update").show();
+        }
+      } , "json");
+    });
+
+    // 删除信息弹框
+    $('#deletepermit').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget);
+      var modal = $(this);
+      jQuery("#errormsg-del").hide();
+      modal.find('#id_del').val(button.data('id'));
+      modal.find('#permitid_del').val(button.data('permit_id'));
+      modal.find('#permitname_del').val(button.data('permit_name'));
+      modal.find('#permitdesc_del').val(button.data('permit_desc'));
+    });
+
+    // 发送删除请求
+    $('#btn-delete').on('click',function(){
+      var id = $('#id_del').val(),
+          permitname = $('#permitname_del').val();
+      jQuery.post('/permit/delete',{
+        'id':id
+      }, function(res){
+        if(res['ok']){
+            jQuery('#deletepermit').hide();
+            swal({
+              title: "您已删除权限："+ permitname,
+              type: "success",
+              showConfirmButton:false,
+              timer:1250,
+            },function(){
+              window.location.reload();
+            });
+        }else{
+            jQuery("#errormsg-del").text(res['result']);
+            jQuery("#errormsg-del").show();
+        };
+      },"json");
+    });
+
+    // 新增信息弹框
+    $('#addpermit').on('show.bs.modal', function (event) {
+      jQuery("#errormsg-add").hide();
+    });
+    // 发送添加请求
+    $('#btn-add').on('click',function(){
+      var permitid = $('#permitid_add').val(),
+          permitname = $('#permitname_add').val(),
+          permitdesc = $('#permitdesc_add').val();
+      //console.log([permitid,permitname,permitdesc])
+      jQuery.post('/permit/add',{
+        'permit_id':permitid,
+        'permit_name':permitname,
+        'permit_desc':permitdesc
+      },function(res){
+        //console.log(res);
+        if(res['ok']){
+            jQuery('#addpermit').hide();
+            swal({
+              title: res['result'],
+              type: "success",
+              showConfirmButton:false,
+              timer:1150,
+            },function(){
+              window.location.reload();
+            });
+        }else{
+            jQuery("#errormsg-add").text(res['result']);
+            jQuery("#errormsg-add").show();
+        }
+      } , "json");
+    });
+});
+{% endblock %}
